@@ -1,8 +1,26 @@
+"use client"
+
+import { useEffect, useRef } from "react"
 import "../styles/hero.css"
 
 const Hero = () => {
+  const videoRef = useRef(null)
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {
+        console.log("Autoplay prevented - video will play on user interaction")
+      })
+    }
+  }, [])
+
   return (
     <section className="hero-section">
+      <video ref={videoRef} className="hero-video-bg" autoPlay muted loop playsInline preload="auto">
+        <source src="https://res.cloudinary.com/dwcxwpn7q/video/upload/v1762095103/machine/kling_20251102_Text_to_Video_Transition_4280_0_ueg7n0.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
       <div className="hero-gradient"></div>
 
       <div className="hero-content-wrapper">

@@ -4,6 +4,7 @@ import Bestsellers from "../components/Bestsellers"
 import WhyChooseUs from "../components/WhyChooseUs"
 import Trust from "../components/Trust"
 import Footer from "../components/Footer"
+import ScrollVideo from "../components/ScrollVideo"
 import "../styles/home.css"
 
 const Home = () => {
@@ -13,6 +14,10 @@ const Home = () => {
       <section id="hero">
         <Hero />
       </section>
+            <section>
+        <ScrollVideo />
+      </section>
+
       <section id="bestsellers">
         <Bestsellers />
       </section>

@@ -1,0 +1,48 @@
+.scrollvideo-section {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+.sticky-wrapper {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+}
+
+.scrollvideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scrollvideo-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.6));
+}
+
+.scrollvideo-title {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.scrollvideo-subtext {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .scrollvideo-title { font-size: 2rem; }
+  .scrollvideo-subtext { font-size: 1rem; }
+}

@@ -6,6 +6,21 @@
   justify-content: center;
   overflow: hidden;
   padding: 4rem 2rem;
+  /* hero section now starts at top of page */
+  margin-top: 0;
+  padding-top: 6rem;
+}
+
+/* added full-screen background video styling */
+.hero-video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  opacity: 0.6;
 }
 
 .hero-gradient {
@@ -14,6 +29,7 @@
   background: radial-gradient(circle at 60% 40%, rgba(139, 69, 87, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 40% 60%, rgba(212, 165, 116, 0.15) 0%, transparent 50%);
   pointer-events: none;
+  z-index: 2;
 }
 
 .hero-content-wrapper {
@@ -136,6 +152,7 @@
   .hero-section {
     min-height: auto;
     padding: 2rem 1.5rem;
+    padding-top: 5rem;
   }
 
   .hero-heading {
