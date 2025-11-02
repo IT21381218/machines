@@ -1,0 +1,73 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Primary Colors - Luxury Dark Romantic Theme */
+  --primary-bg: #1a0f15;
+  --primary-dark: #0f0a0f;
+  --secondary-bg: #2d1b25;
+
+  /* Accent Colors - Rose Gold & Burgundy */
+  --accent-primary: #c97a6a;
+  --accent-rose-gold: #d4a574;
+  --accent-burgundy: #8b4557;
+  --accent-light: #e8b4a8;
+
+  /* Neutral Tones */
+  --text-primary: #f5e6dd;
+  --text-secondary: #c9a88a;
+  --text-muted: #8b7b6f;
+
+  /* Borders & Dividers */
+  --border-color: rgba(196, 122, 106, 0.2);
+
+  /* Fonts */
+  --font-sans: "Poppins", "Inter", sans-serif;
+  --font-serif: "Playfair Display", serif;
+}
+
+html,
+body {
+  background-color: var(--primary-bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-bg) 50%, var(--secondary-bg) 100%);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+a {
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--accent-primary);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-sans);
+  transition: all 0.3s ease;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap");

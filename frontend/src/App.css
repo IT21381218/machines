@@ -1,0 +1,13 @@
+.App {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--primary-bg);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-bg) 50%, var(--secondary-bg) 100%);
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .App {
+    background-attachment: fixed;
+  }
+}
