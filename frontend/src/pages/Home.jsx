@@ -1,8 +1,5 @@
 import Navigation from "../components/Navigation"
 import Hero from "../components/Hero"
-import Bestsellers from "../components/Bestsellers"
-import WhyChooseUs from "../components/WhyChooseUs"
-import Trust from "../components/Trust"
 import Footer from "../components/Footer"
 import ScrollVideo from "../components/ScrollVideo"
 import "../styles/home.css"
@@ -14,19 +11,14 @@ const Home = () => {
       <section id="hero">
         <Hero />
       </section>
-            <section>
+      {/* Scroll Video Section */}
+      <section id="scroll-video-section">
         <ScrollVideo />
       </section>
+            <section id="hero">
+        <Hero />
+      </section>
 
-      <section id="bestsellers">
-        <Bestsellers />
-      </section>
-      <section id="why-us">
-        <WhyChooseUs />
-      </section>
-      <section id="trust">
-        <Trust />
-      </section>
       <Footer />
     </div>
   )

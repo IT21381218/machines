@@ -1,107 +1,305 @@
-"use client"
+import React, { useEffect, useRef, useState } from "react"
+import "../styles/scrollvideo.css"
 
-import { useEffect, useRef, useState } from "react"
-import "../styles/scroll-video.css"
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 
-export default function ScrollVideo() {
-  const videoRef = useRef(null)
-  const sectionRef = useRef(null)
-  const frameRef = useRef(0)
-  const targetRef = useRef(0)
-  const rafRef = useRef(null)
-  const [scrollHeight, setScrollHeight] = useState(0)
-  const [locked, setLocked] = useState(false)
+const ScrollVideo = () => {
+  const wrapperRef = useRef(null)
+  const containerRef = useRef(null)
+  const canvasRef = useRef(null)
+  const spacerRef = useRef(null)
+  const imagesRef = useRef([])
+  const rafIdRef = useRef(null)
+  const latestFrameRef = useRef(0)
+  const displayedFrameRef = useRef(0)
+  const needResizeRef = useRef(true)
+  const lastSizeRef = useRef({ w: 0, h: 0, dpr: 0 })
+  const [isActiveFixed, setIsActiveFixed] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const video = videoRef.current
-    const section = sectionRef.current
-    if (!video || !section) return
-
-    // Ensure video metadata is loaded
-    const handleLoaded = () => {
-      // For short videos, set scroll distance so that video plays fully
-      const duration = video.duration || 5
-      const distance = window.innerHeight + duration * 1000 // adjust multiplier
-      setScrollHeight(distance)
+    let cancelled = false
+    const loadAll = async () => {
+      const promises = []
+      // load 002.png .. 120.png
+      for (let i = 2; i <= 51; i++) {
+        const num = String(i).padStart(3, "0")
+        const img = new Image()
+        img.crossOrigin = "anonymous"
+        img.src = `/frames/${num}.png`
+        promises.push(
+          new Promise((resolve) => {
+            img.onload = () => resolve(img)
+            img.onerror = () => {
+              console.error(`Failed to load frame: ${num}.png`)
+              resolve(null)
+            }
+          }),
+        )
+      }
+      const loaded = await Promise.all(promises)
+      if (cancelled) return
+      imagesRef.current = loaded.filter(Boolean)
+      setIsLoading(false)
     }
 
-    video.addEventListener("loadedmetadata", handleLoaded)
-    video.load()
-
+    loadAll()
     return () => {
-      video.removeEventListener("loadedmetadata", handleLoaded)
+      cancelled = true
     }
   }, [])
 
-  useEffect(() => {
-    const video = videoRef.current
-    const section = sectionRef.current
-    if (!video || !section || scrollHeight === 0) return
+  const ensureCanvasSize = () => {
+    const canvas = canvasRef.current
+    const container = containerRef.current
+    if (!canvas || !container) return
+    const dpr = window.devicePixelRatio || 1
+    const cw = container.clientWidth
+    const ch = container.clientHeight
+    if (
+      lastSizeRef.current.w === cw &&
+      lastSizeRef.current.h === ch &&
+      lastSizeRef.current.dpr === dpr &&
+      !needResizeRef.current
+    ) {
+      return
+    }
+    needResizeRef.current = false
+    lastSizeRef.current = { w: cw, h: ch, dpr }
 
-    // Create fake scroll div
-    const proxy = document.createElement("div")
-    proxy.style.height = `${scrollHeight}px`
-    section.parentNode.insertBefore(proxy, section.nextSibling)
+    canvas.style.width = `${cw}px`
+    canvas.style.height = `${ch}px`
+    canvas.width = Math.round(cw * dpr)
+    canvas.height = Math.round(ch * dpr)
 
-    const handleScroll = () => {
-      const rect = section.getBoundingClientRect()
-      const scrollTop = -rect.top
-      const progress = Math.min(Math.max(scrollTop / (scrollHeight - window.innerHeight), 0), 1)
-      if (video.duration) targetRef.current = progress * video.duration
+    const ctx = canvas.getContext("2d")
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.imageSmoothingEnabled = true
+    ctx.clearRect(0, 0, cw, ch)
+  }
 
-      // Lock scroll until video finishes
-      if (progress < 1) {
-        if (!locked) {
-          document.body.style.overflow = "hidden"
-          setLocked(true)
-        }
+  const drawImageCover = (ctx, img, cw, ch) => {
+    const imgRatio = img.width / img.height
+    const canvasRatio = cw / ch
+    let drawWidth, drawHeight
+    if (imgRatio > canvasRatio) {
+      drawHeight = ch
+      drawWidth = imgRatio * drawHeight
+    } else {
+      drawWidth = cw
+      drawHeight = drawWidth / imgRatio
+    }
+    const dx = (cw - drawWidth) / 2
+    const dy = (ch - drawHeight) / 2
+    ctx.drawImage(img, dx, dy, drawWidth, drawHeight)
+  }
+
+  const startRafLoop = () => {
+    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
+
+    const loop = () => {
+      if (needResizeRef.current) ensureCanvasSize()
+
+      const imgs = imagesRef.current
+      const frameCount = imgs.length || 1
+
+      const displayed = displayedFrameRef.current
+      const target = latestFrameRef.current
+      const ease = 0.12
+      const nextDisplayed = displayed + (target - displayed) * ease
+
+      // snap to final if target is last and close enough
+      if (target >= frameCount - 1 - 1e-6 && Math.abs(target - nextDisplayed) < 0.01) {
+        displayedFrameRef.current = frameCount - 1
       } else {
-        if (locked) {
-          document.body.style.overflow = ""
-          setLocked(false)
-        }
+        displayedFrameRef.current = nextDisplayed
       }
+
+      const clamped = clamp(displayedFrameRef.current, 0, Math.max(0, frameCount - 1))
+      const canvas = canvasRef.current
+      const ctx = canvas?.getContext("2d")
+      const container = containerRef.current
+      if (ctx && container && imgs.length > 0) {
+        const cw = container.clientWidth
+        const ch = container.clientHeight
+
+        // black background to avoid page white showing through
+        ctx.clearRect(0, 0, cw, ch)
+        ctx.fillStyle = "#000"
+        ctx.fillRect(0, 0, cw, ch)
+
+        const i0 = Math.floor(clamped)
+        const i1 = Math.min(i0 + 1, frameCount - 1)
+        const t = clamped - i0
+
+        ctx.globalAlpha = 1
+        drawImageCover(ctx, imgs[i0], cw, ch)
+
+        if (i1 !== i0 && t > 0) {
+          ctx.globalAlpha = t
+          drawImageCover(ctx, imgs[i1], cw, ch)
+        }
+        ctx.globalAlpha = 1
+      }
+
+      rafIdRef.current = requestAnimationFrame(loop)
     }
 
-    const smoothUpdate = () => {
-      const current = frameRef.current
-      const target = targetRef.current
-      frameRef.current = current + (target - current) * 0.2 // lerp
-      if (video.duration) video.currentTime = frameRef.current
-      rafRef.current = requestAnimationFrame(smoothUpdate)
+    rafIdRef.current = requestAnimationFrame(loop)
+  }
+
+  useEffect(() => {
+    if (!isLoading && imagesRef.current.length > 0) {
+      needResizeRef.current = true
+      displayedFrameRef.current = 0
+      latestFrameRef.current = 0
+      startRafLoop()
+    }
+    return () => {
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
+      rafIdRef.current = null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading])
+
+  useEffect(() => {
+    if (isLoading) return
+    const wrapper = wrapperRef.current
+    const container = containerRef.current
+    const spacer = spacerRef.current
+    if (!wrapper || !container || !spacer) return
+
+    const onResize = () => {
+      needResizeRef.current = true
+    }
+    window.addEventListener("resize", onResize)
+    window.addEventListener("orientationchange", onResize)
+
+    let ticking = false
+    const startTop = wrapper.offsetTop
+    const releaseRangePx = Math.max(120, Math.round(window.innerHeight * 0.5))
+    const releaseBufferPx = 12
+
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY
+        const spacerHeight = spacer.offsetHeight
+
+        // scrolled inside animation region: 0 .. spacerHeight
+        const scrolled = clamp(scrollY - startTop, 0, spacerHeight)
+        const progress = spacerHeight > 0 ? scrolled / spacerHeight : 0
+        const frameCount = imagesRef.current.length || 1
+
+        // set target frames; snap to final frame at end
+        if (progress >= 1) {
+          latestFrameRef.current = frameCount - 1
+          displayedFrameRef.current = frameCount - 1
+        } else if (progress <= 0) {
+          latestFrameRef.current = 0
+        } else {
+          latestFrameRef.current = progress * (frameCount - 1)
+        }
+
+        const releaseStart = startTop + spacerHeight
+        const after = clamp((scrollY - releaseStart) / releaseRangePx, 0, 1)
+
+        // keep fixed until slightly after release end so next section paints under canvas
+        const active = scrollY >= startTop && scrollY < (releaseStart + releaseRangePx + releaseBufferPx)
+        setIsActiveFixed(active)
+
+        // apply smooth fade/translate while releasing (0..1)
+        if (container) {
+          container.style.background = "#000"
+          if (after > 0 && after < 1) {
+            container.style.opacity = String(1 - after)
+            container.style.transform = `translateY(-${after * 28}px)`
+            container.style.pointerEvents = "none"
+            container.style.willChange = "opacity, transform"
+          } else if (after >= 1) {
+            container.style.opacity = "0"
+            container.style.transform = `translateY(-28px)`
+            container.style.pointerEvents = "none"
+          } else {
+            container.style.opacity = ""
+            container.style.transform = ""
+            container.style.pointerEvents = ""
+            container.style.willChange = ""
+          }
+        }
+
+        ticking = false
+      })
     }
 
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    rafRef.current = requestAnimationFrame(smoothUpdate)
+    latestFrameRef.current = 0
+    displayedFrameRef.current = 0
+    needResizeRef.current = true
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    onScroll()
 
     return () => {
-      window.removeEventListener("scroll", handleScroll)
-      cancelAnimationFrame(rafRef.current)
-      if (proxy.parentNode) proxy.parentNode.removeChild(proxy)
-      document.body.style.overflow = ""
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", onResize)
+      window.removeEventListener("orientationchange", onResize)
     }
-  }, [scrollHeight, locked])
+  }, [isLoading])
+
+  // keep body background dark while animation active to avoid white flash
+  useEffect(() => {
+    const className = "scrollvideo-active-bg"
+    if (isActiveFixed) {
+      document.body.classList.add(className)
+    } else {
+      document.body.classList.remove(className)
+    }
+    return () => {
+      document.body.classList.remove(className)
+    }
+  }, [isActiveFixed])
+
+  // cleanup RAF on unmount and clear inline styles
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
+      const c = containerRef.current
+      if (c) {
+        c.style.opacity = ""
+        c.style.transform = ""
+        c.style.pointerEvents = ""
+        c.style.background = ""
+        c.style.willChange = ""
+      }
+      document.body.classList.remove("scrollvideo-active-bg")
+    }
+  }, [])
 
   return (
-    <section ref={sectionRef} className="scrollvideo-section">
-      <div className="sticky-wrapper">
-        <video
-          ref={videoRef}
-          className="scrollvideo"
-          muted
-          playsInline
-          preload="auto"
+    <div className="scroll-video-root">
+      <div ref={wrapperRef} className="scroll-video-wrapper">
+        <div
+          ref={containerRef}
+          className={`scroll-video-container ${isActiveFixed ? "fixed-active" : ""}`}
         >
-          <source
-            src="https://res.cloudinary.com/dwcxwpn7q/video/upload/v1762095910/machine/kling_20251102_Text_to_Video_Slow__cine_4214_0_xdjzw0.mp4"
-            type="video/mp4"
+          {isLoading && (
+            <div className="scroll-video-loader">
+              <div className="spinner" />
+              <p>Loading animation...</p>
+            </div>
+          )}
+          <canvas
+            ref={canvasRef}
+            className="scroll-video-canvas"
+            style={{ display: isLoading ? "none" : "block", background: "#000" }}
           />
-        </video>
-        <div className="scrollvideo-overlay">
-          <h1 className="scrollvideo-title">Scroll to Play Full Video</h1>
-          <p className="scrollvideo-subtext">Video plays as you scroll</p>
         </div>
       </div>
-    </section>
+
+      <div ref={spacerRef} className="scroll-video-spacer" />
+    </div>
   )
 }
+
+export default ScrollVideo

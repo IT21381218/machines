@@ -1,65 +1,27 @@
-"use client"
-
-import { useEffect, useRef } from "react"
 import "../styles/hero.css"
 
-const Hero = () => {
-  const videoRef = useRef(null)
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {
-        console.log("Autoplay prevented - video will play on user interaction")
-      })
-    }
-  }, [])
-
+function Hero() {
   return (
-    <section className="hero-section">
-      <video ref={videoRef} className="hero-video-bg" autoPlay muted loop playsInline preload="auto">
+    <section className="hero">
+      {/* Background Video */}
+      <video autoPlay muted loop className="hero-video" poster="/elegant-background.jpg">
         <source src="https://res.cloudinary.com/dwcxwpn7q/video/upload/v1762095103/machine/kling_20251102_Text_to_Video_Transition_4280_0_ueg7n0.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-      <div className="hero-gradient"></div>
+      {/* Dark Overlay */}
+      <div className="hero-overlay"></div>
 
-      <div className="hero-content-wrapper">
-        <div className="hero-text">
-          <h1 className="hero-heading">Indulge in Intimate Luxury</h1>
-          <p className="hero-description">Explore premium wellness toys designed for pleasure and confidence.</p>
-          <button className="shop-button">
-            <span>Shop Now</span>
-            <span className="glow-accent">✨</span>
-          </button>
-        </div>
+      {/* Content */}
+      <div className="hero-content">
+        <h1 className="hero-title">Discover Premium Wellness</h1>
+        <p className="hero-subtitle">
+          Explore our curated collection of luxury products designed for your intimate well-being
+        </p>
 
-        <div className="hero-visual">
-          <div className="abstract-visual">
-            <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg" className="silk-curves">
-              <defs>
-                <radialGradient id="luxury-gradient" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" style={{ stopColor: "#f5e6dd", stopOpacity: 1 }} />
-                  <stop offset="50%" style={{ stopColor: "#d4a574", stopOpacity: 0.8 }} />
-                  <stop offset="100%" style={{ stopColor: "#8b4557", stopOpacity: 0.6 }} />
-                </radialGradient>
-              </defs>
-              {/* Abstract sensual curves */}
-              <path
-                d="M 50,100 Q 100,80 150,100 Q 180,120 200,170 Q 210,220 180,280 Q 150,310 100,320 Q 50,310 30,280 Q 10,220 20,170 Q 40,120 50,100 Z"
-                fill="url(#luxury-gradient)"
-                opacity="0.9"
-              />
-              <ellipse cx="150" cy="200" rx="80" ry="120" fill="none" stroke="#e8b4a8" strokeWidth="2" opacity="0.5" />
-              <path
-                d="M 100,150 Q 120,140 140,150"
-                stroke="#c99d8a"
-                strokeWidth="3"
-                fill="none"
-                opacity="0.6"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
+        <div className="hero-buttons">
+          <button className="btn btn-primary">Shop Now</button>
+          <button className="btn btn-secondary">Learn More</button>
         </div>
       </div>
     </section>
