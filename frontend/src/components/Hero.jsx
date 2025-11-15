@@ -1,6 +1,13 @@
 import "../styles/hero.css"
+import { useNavigate } from 'react-router-dom'
 
 function Hero() {
+  const navigate = useNavigate()
+
+  const handleLearnMore = () => {
+    navigate('/shipping')
+  }
+
   return (
     <section className="hero">
       {/* Background Video */}
@@ -21,7 +28,7 @@ function Hero() {
 
         <div className="hero-buttons">
           <button className="btn btn-primary">Shop Now</button>
-          <button className="btn btn-secondary">Learn More</button>
+          <button className="btn btn-secondary" onClick={handleLearnMore}>Learn More</button>
         </div>
       </div>
     </section>
